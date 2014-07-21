@@ -1,0 +1,105 @@
+---
+title: "Practical Machine Learning Course Project"
+output: html_document
+---
+
+## Data preparation
+
+The data was loaded into R and brought into a suitable form using the following code:
+```{r,echo=TRUE, cache=TRUE, results="hide", warning=FALSE, message=FALSE}
+library(caret);
+
+# load the data set
+trainData <- read.csv(file="D:/R/MachineLearningProject/pml-training.csv", skip=0, header=TRUE, stringsAsFactors=FALSE);
+
+# remove timestamp and other useless columns which are not relevant to the physical measurements
+trainData <- trainData[,-grep("timestamp", colnames(trainData))];
+trainData$X <- NULL;
+
+# convert character columns to factors
+trainData$user_name <- as.factor(trainData$user_name);
+trainData$classe <- as.factor(trainData$classe);
+
+# convert measurement columns to numeric colums
+for (i in 2:(length(trainData)-1))
+{
+    trainData[,i] <- as.numeric(trainData[,i]);
+}
+rm(i);
+
+# throw away incomplete columns
+trainData <- trainData[colSums(is.na(trainData))==0];
+
+# remove more (presumably) useless columns
+trainData$num_window <- NULL;
+```
+
+
+## Data subsetting
+
+Due to the relatively large size of the training set, only a small subset of the training data was used to develop a machine learning algorithm. Firstly, the number of variables was strongly reduced using the command
+
+```{r, echo=TRUE, results="hide"}
+trainData <- trainData[,grep("(user_name)|(classe)|(total_accel)|(roll)|(pitch)|(yaw)", colnames(trainData))];
+```
+. Secondly, for choosing the method for the prediction model, a small subset of the training data containing only one percent of the total training data was randomly picked using the code
+```{r, echo=TRUE, message=FALSE, results="hide", cache=TRUE}
+library(caret);
+partition <- createDataPartition(trainData$classe, p=0.01);
+trainSubset <- trainData[partition[[1]], ];
+rm(partition);
+```
+.
+
+
+## Choice of prediction method
+
+Several prediction methods were applied to the small trainig subset to check how well they can predict the outcome "classe" variable. The resulting prediction was applied to the entire test set and the percentage of correct results was calculated:
+```{r, echo=TRUE, message=FALSE, results='hold', cache=TRUE}
+library(caret);
+methods <- c("treebag","rpart2","rf");
+
+for (j in 1:3)
+{
+    modelFit <- train(classe ~ ., data=trainSubset, method=methods[j]);
+    trainPrediction <- predict(modelFit, newdata=trainData);
+    print(paste("share of correct predictions for method ", methods[j], ":  ", 
+                round(100*sum(trainPrediction==trainData$classe)/nrow(trainData)), " %", sep=""));
+}
+rm(j);
+```
+From these results, the random forest method ("rf") was found to be most reliable. 
+
+
+## Cross validation
+
+The "rf" method was then applied to three randomly chosen subsets of the training data set as a mean of cross validation. 
+```{r, echo=TRUE, message=FALSE, results='hold', cache=TRUE}
+for (k in 1:3)
+{
+    partition <- createDataPartition(trainData$classe, p=0.01);
+    trainSubset <- trainData[partition[[1]], ];
+    modelFit <- train(classe ~ ., data=trainSubset, method="rf");
+    trainPrediction <- predict(modelFit, newdata=trainData);
+    print(paste("share of correct predictions:  ", 
+                round(100*sum(trainPrediction==trainData$classe)/nrow(trainData)), " %", sep=""));
+}
+rm(k, partition);
+```
+The resulting share of correct predictions is about 70 % and does not appear to be subject to large variations using cross validation. 
+
+
+## Final model
+
+For the final model, again the random forest method "rf" was picked, but the trainig data subset was increased to 5 % of the total training data set:
+```{r, echo=TRUE, message=FALSE, results='hold', cache=TRUE}
+partition <- createDataPartition(trainData$classe, p=0.05);
+trainSubset <- trainData[partition[[1]], ];
+modelFit <- train(classe ~ ., data=trainSubset, method="rf");
+trainPrediction <- predict(modelFit, newdata=trainData);
+print(paste("share of correct predictions:  ", 
+            round(100*sum(trainPrediction==trainData$classe)/nrow(trainData)), " %", sep=""));
+```
+By increasing the training data subset size, the accuracy of the prediction model has risen to `r round(100*sum(trainPrediction==trainData$classe)/nrow(trainData))` %. 
+
+
