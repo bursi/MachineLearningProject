@@ -3,7 +3,7 @@ title: "Practical Machine Learning Course Project"
 output: html_document
 ---
 
-## Data preparation
+#### Data preparation
 
 The data was loaded into R and brought into a suitable form using the following code:
 ```{r,echo=TRUE, cache=TRUE, results="hide", warning=FALSE, message=FALSE}
@@ -35,7 +35,7 @@ trainData$num_window <- NULL;
 ```
 
 
-## Data subsetting
+#### Data subsetting
 
 Due to the relatively large size of the training set, only a small subset of the training data was used to develop a machine learning algorithm. Firstly, the number of variables was strongly reduced using the command
 
@@ -52,7 +52,7 @@ rm(partition);
 .
 
 
-## Choice of prediction method
+#### Choice of prediction method
 
 Several prediction methods were applied to the small trainig subset to check how well they can predict the outcome "classe" variable. The resulting prediction was applied to the entire test set and the percentage of correct results was calculated:
 ```{r, echo=TRUE, message=FALSE, results='hold', cache=TRUE}
@@ -71,7 +71,7 @@ rm(j);
 From these results, the random forest method ("rf") was found to be most reliable. 
 
 
-## Cross validation
+#### Cross validation
 
 The "rf" method was then applied to three randomly chosen subsets of the training data set as a mean of cross validation. 
 ```{r, echo=TRUE, message=FALSE, results='hold', cache=TRUE}
@@ -89,9 +89,9 @@ rm(k, partition);
 The resulting share of correct predictions is about 70 % and does not appear to be subject to large variations using cross validation. 
 
 
-## Final model
+#### Final model
 
-For the final model, again the random forest method "rf" was picked, but the trainig data subset was increased to 5 % of the total training data set:
+For the final model (used for the submission test data set), again the random forest method "rf" was picked, but the trainig data subset was increased to 5 % of the total training data set:
 ```{r, echo=TRUE, message=FALSE, results='hold', cache=TRUE}
 partition <- createDataPartition(trainData$classe, p=0.05);
 trainSubset <- trainData[partition[[1]], ];
@@ -100,6 +100,7 @@ trainPrediction <- predict(modelFit, newdata=trainData);
 print(paste("share of correct predictions:  ", 
             round(100*sum(trainPrediction==trainData$classe)/nrow(trainData)), " %", sep=""));
 ```
-By increasing the training data subset size, the accuracy of the prediction model has risen to `r round(100*sum(trainPrediction==trainData$classe)/nrow(trainData))` %. 
+By increasing the training data subset size, the accuracy of the prediction model has risen to `r round(100*sum(trainPrediction==trainData$classe)/nrow(trainData))` %, i.e. the out of sample error ist estimated to be roughly 10 %. 
+An additional cross validation with this training subset was not performed, since the variation of the resulting out of sample error is expected to be smaller than in the previously reported case with a smaller training sample size. 
 
 

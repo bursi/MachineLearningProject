@@ -56,8 +56,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </div>
 
 
-<div id="data-preparation" class="section level2">
-<h2>Data preparation</h2>
+<div id="data-preparation" class="section level4">
+<h4>Data preparation</h4>
 <p>The data was loaded into R and brought into a suitable form using the following code:</p>
 <pre class="r"><code>library(caret);
 
@@ -85,8 +85,8 @@ trainData &lt;- trainData[colSums(is.na(trainData))==0];
 # remove more (presumably) useless columns
 trainData$num_window &lt;- NULL;</code></pre>
 </div>
-<div id="data-subsetting" class="section level2">
-<h2>Data subsetting</h2>
+<div id="data-subsetting" class="section level4">
+<h4>Data subsetting</h4>
 <p>Due to the relatively large size of the training set, only a small subset of the training data was used to develop a machine learning algorithm. Firstly, the number of variables was strongly reduced using the command</p>
 <pre class="r"><code>trainData &lt;- trainData[,grep(&quot;(user_name)|(classe)|(total_accel)|(roll)|(pitch)|(yaw)&quot;, colnames(trainData))];</code></pre>
 <p>. Secondly, for choosing the method for the prediction model, a small subset of the training data containing only one percent of the total training data was randomly picked using the code</p>
@@ -96,8 +96,8 @@ trainSubset &lt;- trainData[partition[[1]], ];
 rm(partition);</code></pre>
 <p>.</p>
 </div>
-<div id="choice-of-prediction-method" class="section level2">
-<h2>Choice of prediction method</h2>
+<div id="choice-of-prediction-method" class="section level4">
+<h4>Choice of prediction method</h4>
 <p>Several prediction methods were applied to the small trainig subset to check how well they can predict the outcome “classe” variable. The resulting prediction was applied to the entire test set and the percentage of correct results was calculated:</p>
 <pre class="r"><code>library(caret);
 methods &lt;- c(&quot;treebag&quot;,&quot;rpart2&quot;,&quot;rf&quot;);
@@ -115,8 +115,8 @@ rm(j);</code></pre>
 ## [1] &quot;share of correct predictions for method rf:  71 %&quot;</code></pre>
 <p>From these results, the random forest method (“rf”) was found to be most reliable.</p>
 </div>
-<div id="cross-validation" class="section level2">
-<h2>Cross validation</h2>
+<div id="cross-validation" class="section level4">
+<h4>Cross validation</h4>
 <p>The “rf” method was then applied to three randomly chosen subsets of the training data set as a mean of cross validation.</p>
 <pre class="r"><code>for (k in 1:3)
 {
@@ -133,9 +133,9 @@ rm(k, partition);</code></pre>
 ## [1] &quot;share of correct predictions:  71 %&quot;</code></pre>
 <p>The resulting share of correct predictions is about 70 % and does not appear to be subject to large variations using cross validation.</p>
 </div>
-<div id="final-model" class="section level2">
-<h2>Final model</h2>
-<p>For the final model, again the random forest method “rf” was picked, but the trainig data subset was increased to 5 % of the total training data set:</p>
+<div id="final-model" class="section level4">
+<h4>Final model</h4>
+<p>For the final model (used for the submission test data set), again the random forest method “rf” was picked, but the trainig data subset was increased to 5 % of the total training data set:</p>
 <pre class="r"><code>partition &lt;- createDataPartition(trainData$classe, p=0.05);
 trainSubset &lt;- trainData[partition[[1]], ];
 modelFit &lt;- train(classe ~ ., data=trainSubset, method=&quot;rf&quot;);
@@ -143,7 +143,7 @@ trainPrediction &lt;- predict(modelFit, newdata=trainData);
 print(paste(&quot;share of correct predictions:  &quot;, 
             round(100*sum(trainPrediction==trainData$classe)/nrow(trainData)), &quot; %&quot;, sep=&quot;&quot;));</code></pre>
 <pre><code>## [1] &quot;share of correct predictions:  92 %&quot;</code></pre>
-<p>By increasing the training data subset size, the accuracy of the prediction model has risen to 92 %.</p>
+<p>By increasing the training data subset size, the accuracy of the prediction model has risen to 92 %, i.e. the out of sample error ist estimated to be roughly 10 %. An additional cross validation with this training subset was not performed, since the variation of the resulting out of sample error is expected to be smaller than in the previously reported case with a smaller training sample size.</p>
 </div>
 
 
